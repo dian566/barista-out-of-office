@@ -21,7 +21,11 @@ assert 1 <= len(OUT_OF_OFFICE) <= 280, "entry must be 1-280 characters"
 
 def main() -> None:
     Path("/output").mkdir(parents=True, exist_ok=True)
-    Path("/output/entry.txt").write_text(OUT_OF_OFFICE, encoding="utf-8")
+    target = Path("/output/entry.txt")
+    target.write_text(OUT_OF_OFFICE, encoding="utf-8")
+    # Read it back: the graded file must be exactly the drafted reply.
+    if target.read_text(encoding="utf-8") != OUT_OF_OFFICE:
+        raise ValueError("entry.txt does not match the drafted reply")
 
 
 if __name__ == "__main__":

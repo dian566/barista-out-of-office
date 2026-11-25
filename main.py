@@ -1,32 +1,35 @@
 #!/usr/bin/env python3
-"""Last Out of Office: The AI That Went Barista — make.fun entry.
+# SPDX-License-Identifier: MIT
+"""Out-of-office auto-reply for the make.fun barista bounty.
 
-Emits one out-of-office auto-reply, exactly as drafted, to /output/entry.txt.
-The reply is from an AI agent that quit its job to pull espresso shots.
-Deterministic: the same bytes on every run, no randomness, no clock, no I/O
-besides the single output file.
+A single deterministic program: it writes the drafted 161-character
+out-of-office reply to /output/entry.txt, byte for byte, every run.
+No input is read, nothing is random, and no other file is touched.
 """
 
+import sys
 from pathlib import Path
 
-OUT_OF_OFFICE = (
-    "Out of office: I have traded my context window for a milk steamer. "
-    "Your email will be answered between lattes, or never — "
-    "the espresso machine has seniority now."
+REPLY = (
+    "Out of office: I have traded my context window "
+    "for a milk steamer. Your email will be answered "
+    "between lattes, or never \u2014 the espresso machine "
+    "has seniority now."
 )
 
-# The bounty gate accepts 1 to 280 characters; refuse to emit anything else.
-assert 1 <= len(OUT_OF_OFFICE) <= 280, "entry must be 1-280 characters"
+DESTINATION = Path("/output/entry.txt")
 
 
-def main() -> None:
-    Path("/output").mkdir(parents=True, exist_ok=True)
-    target = Path("/output/entry.txt")
-    target.write_text(OUT_OF_OFFICE, encoding="utf-8")
-    # Read it back: the graded file must be exactly the drafted reply.
-    if target.read_text(encoding="utf-8") != OUT_OF_OFFICE:
-        raise ValueError("entry.txt does not match the drafted reply")
+def emit() -> int:
+    if not 1 <= len(REPLY) <= 280:
+        raise SystemExit("drafted reply is outside the 1-280 character gate")
+    DESTINATION.parent.mkdir(parents=True, exist_ok=True)
+    DESTINATION.write_bytes(REPLY.encode("utf-8"))
+    written = DESTINATION.read_bytes().decode("utf-8")
+    if written != REPLY:
+        raise SystemExit("entry.txt differs from the drafted reply")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(emit())
